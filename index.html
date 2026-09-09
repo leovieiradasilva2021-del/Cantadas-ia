@@ -9,7 +9,7 @@
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
     body { background-color: #0b0b10; color: #ffffff; display: flex; height: 100vh; overflow: hidden; }
     
-    /* SIDEBAR / HISTÓRICO DE CHATS */
+    /* SIDEBAR */
     .sidebar { width: 270px; background: #12121c; border-right: 1px solid #222233; display: flex; flex-direction: column; padding: 15px; position: absolute; height: 100%; z-index: 10; transform: translateX(-100%); transition: transform 0.3s ease; }
     .sidebar.open { transform: translateX(0); }
     .btn-new-chat { background: linear-gradient(90deg, #ff4b72, #a855f7); color: white; border: none; padding: 12px; border-radius: 10px; font-weight: bold; cursor: pointer; margin-bottom: 20px; }
@@ -44,13 +44,11 @@
 </head>
 <body>
 
-  <!-- SIDEBAR COM HISTÓRICO DE CHATS -->
   <div class="sidebar" id="sidebar">
     <button class="btn-new-chat" onclick="criarNovoChat()">+ Nova Conversa</button>
     <div class="chat-list" id="chatList"></div>
   </div>
 
-  <!-- CONTAINER PRINCIPAL -->
   <div class="main">
     <div class="header">
       <button class="menu-btn" onclick="toggleSidebar()">☰</button>
@@ -59,7 +57,6 @@
     </div>
 
     <div class="content">
-      <!-- ONDE SE CONHECERAM -->
       <div class="form-group">
         <label>Onde vocês se conheceram / conversam?</label>
         <select id="local">
@@ -72,17 +69,15 @@
         </select>
       </div>
 
-      <!-- TAMANHO DA MENSAGEM -->
       <div class="form-group">
         <label>Tamanho da Mensagem</label>
         <select id="tamanho">
           <option value="Curtas (Frases de 1 linha, diretas e rápidas)">Curtas (Tiradas rápidas / 1 linha)</option>
           <option value="Médias (2 a 3 linhas, ideais para desenrolar)" selected>Médias (Equilibradas / 2 a 3 linhas)</option>
-          <option value="Longas (Desenrolo completo, puxando assunto profundo)">Longas (Desenrolo profundo)</option>
+          <option value="Longas (Desenrolo profundo)">Longas (Desenrolo profundo)</option>
         </select>
       </div>
 
-      <!-- PRINT OU FOTO -->
       <div class="form-group">
         <label>Print da conversa ou Foto do Perfil</label>
         <div class="upload-box" onclick="document.getElementById('fileInput').click()">
@@ -93,7 +88,6 @@
         <input type="file" id="fileInput" accept="image/*" style="display: none;" onchange="mostrarPreview(event)">
       </div>
 
-      <!-- DETALHES -->
       <div class="form-group">
         <label>O que ela disse ou detalhe importante?</label>
         <textarea id="contexto" placeholder="Ex: Ela demorou a responder, postou foto no mar, gosta de forró..."></textarea>
@@ -101,7 +95,6 @@
 
       <button class="btn-generate" id="btnGerar" onclick="gerarResposta()">ANALISAR E GERAR MENSAGEM ⚡</button>
 
-      <!-- RESPOSTAS -->
       <div class="chat-history" id="chatHistory"></div>
     </div>
   </div>
@@ -124,16 +117,30 @@
       document.getElementById('sidebar').classList.toggle('open');
     }
 
+    // Redimensiona a imagem para não estourar a API do Puter
     function mostrarPreview(event) {
       const file = event.target.files[0];
       if (file) {
         const reader = new FileReader();
         reader.onload = function(e) {
-          imagemBase64 = e.target.result;
-          const img = document.getElementById('preview');
-          img.src = imagemBase64;
-          img.style.display = 'block';
-          document.getElementById('uploadText').innerText = "Foto pronta para análise!";
+          const imgElement = new Image();
+          imgElement.src = e.target.result;
+          imgElement.onload = function() {
+            const canvas = document.createElement('canvas');
+            const MAX_WIDTH = 600;
+            const scaleSize = MAX_WIDTH / imgElement.width;
+            canvas.width = MAX_WIDTH;
+            canvas.height = imgElement.height * scaleSize;
+
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(imgElement, 0, 0, canvas.width, canvas.height);
+            imagemBase64 = canvas.toDataURL('image/jpeg', 0.7);
+
+            const img = document.getElementById('preview');
+            img.src = imagemBase64;
+            img.style.display = 'block';
+            document.getElementById('uploadText').innerText = "Foto otimizada para análise!";
+          }
         }
         reader.readAsDataURL(file);
       }
@@ -218,7 +225,12 @@ Forneça 3 OPÇÕES de respostas prontas no tamanho pedido:
       try {
         let resposta;
         if (imagemBase64) {
-          resposta = await puter.ai.chat(prompt, imagemBase64);
+          try {
+            resposta = await puter.ai.chat(prompt, imagemBase64);
+          } catch (errImg) {
+            console.warn("Falha no envio da imagem, tentando apenas com texto:", errImg);
+            resposta = await puter.ai.chat(prompt + "\n(Nota: O usuário enviou uma foto, mas analise com base no contexto informado).");
+          }
         } else {
           resposta = await puter.ai.chat(prompt);
         }
@@ -234,7 +246,7 @@ Forneça 3 OPÇÕES de respostas prontas no tamanho pedido:
         adicionarCardResultado(resposta, true);
         document.getElementById('contexto').value = "";
       } catch (e) {
-        alert("Erro ao analisar. Tente novamente!");
+        alert("Erro ao conectar à IA. Verifique sua conexão e tente novamente!");
         console.error(e);
       } finally {
         btn.disabled = false;
