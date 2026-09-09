@@ -3,55 +3,126 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Rizz AI — Assistente de Paquera</title>
+  <title>Rizz AI Nordestino — Desenrolo Automático</title>
   <script src="https://js.puter.com/v2/"></script>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
-    body { background-color: #0d0d12; color: #ffffff; display: flex; justify-content: center; padding: 20px; min-height: 100vh; }
-    .container { width: 100%; max-width: 420px; background: #16161e; border-radius: 24px; padding: 24px; border: 1px solid #2a2a3a; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-    h1 { font-size: 24px; font-weight: 800; text-align: center; margin-bottom: 8px; background: linear-gradient(45deg, #ff4b72, #a855f7); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    p.subtitle { text-align: center; color: #8a8a9e; font-size: 14px; margin-bottom: 24px; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    body { background-color: #0b0b10; color: #ffffff; display: flex; height: 100vh; overflow: hidden; }
     
-    .upload-box { border: 2px dashed #3a3a4e; border-radius: 16px; padding: 20px; text-align: center; cursor: pointer; background: #1f1f2e; transition: 0.2s; margin-bottom: 16px; }
-    .upload-box:hover { border-color: #ff4b72; }
-    .upload-box p { color: #aaa; font-size: 14px; margin-top: 8px; }
-    #preview { max-width: 100%; max-height: 200px; border-radius: 12px; display: none; margin: 10px auto 0; }
-    
-    textarea { width: 100%; height: 70px; background: #1f1f2e; border: 1px solid #2a2a3a; border-radius: 12px; color: #fff; padding: 12px; font-size: 14px; resize: none; margin-bottom: 16px; outline: none; }
-    textarea:focus { border-color: #a855f7; }
-    
-    button { width: 100%; background: linear-gradient(90deg, #ff4b72, #a855f7); color: white; border: none; padding: 16px; font-size: 16px; font-weight: 700; border-radius: 14px; cursor: pointer; transition: opacity 0.2s; }
-    button:active { opacity: 0.8; }
-    
-    #resultado { margin-top: 20px; padding: 16px; background: #1f1f2e; border-radius: 14px; border: 1px solid #2a2a3a; font-size: 15px; line-height: 1.6; white-space: pre-line; display: none; color: #e2e2e8; }
+    /* SIDEBAR / HISTÓRICO DE CHATS */
+    .sidebar { width: 270px; background: #12121c; border-right: 1px solid #222233; display: flex; flex-direction: column; padding: 15px; position: absolute; height: 100%; z-index: 10; transform: translateX(-100%); transition: transform 0.3s ease; }
+    .sidebar.open { transform: translateX(0); }
+    .btn-new-chat { background: linear-gradient(90deg, #ff4b72, #a855f7); color: white; border: none; padding: 12px; border-radius: 10px; font-weight: bold; cursor: pointer; margin-bottom: 20px; }
+    .chat-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+    .chat-item { background: #181824; padding: 12px; border-radius: 8px; font-size: 13px; cursor: pointer; color: #ccc; border: 1px solid #28283a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .chat-item.active { border-color: #ff4b72; color: #fff; background: #222234; }
+
+    /* ÁREA PRINCIPAL */
+    .main { flex: 1; display: flex; flex-direction: column; height: 100vh; position: relative; }
+    .header { padding: 15px 20px; border-bottom: 1px solid #222233; display: flex; align-items: center; justify-content: space-between; background: #12121c; }
+    .menu-btn { background: none; border: none; color: #fff; font-size: 22px; cursor: pointer; }
+    .header h1 { font-size: 18px; background: linear-gradient(45deg, #ff4b72, #a855f7); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 800; }
+
+    .content { flex: 1; overflow-y: auto; padding: 20px; max-width: 500px; margin: 0 auto; width: 100%; }
+
+    /* FORMULÁRIO */
+    .form-group { margin-bottom: 15px; }
+    label { display: block; font-size: 12px; color: #9a9ab0; margin-bottom: 6px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+    select, textarea { width: 100%; background: #181824; border: 1px solid #28283a; color: #fff; padding: 12px; border-radius: 10px; font-size: 14px; outline: none; }
+    select:focus, textarea:focus { border-color: #a855f7; }
+
+    .upload-box { border: 2px dashed #28283a; border-radius: 12px; padding: 16px; text-align: center; cursor: pointer; background: #141420; }
+    #preview { max-width: 100%; max-height: 160px; border-radius: 8px; margin-top: 10px; display: none; }
+
+    button.btn-generate { width: 100%; background: linear-gradient(90deg, #ff4b72, #a855f7); color: white; border: none; padding: 16px; font-weight: 700; border-radius: 12px; cursor: pointer; margin-top: 10px; font-size: 15px; }
+
+    /* MENSAGENS E RESULTADOS */
+    .chat-history { margin-top: 25px; display: flex; flex-direction: column; gap: 15px; }
+    .msg-card { background: #181824; border: 1px solid #28283a; border-radius: 12px; padding: 16px; font-size: 14px; line-height: 1.6; position: relative; }
+    .copy-btn { position: absolute; top: 12px; right: 12px; background: #28283a; border: none; color: #fff; padding: 4px 10px; border-radius: 6px; font-size: 11px; cursor: pointer; }
   </style>
 </head>
 <body>
 
-  <div class="container">
-    <h1>RIZZ AI 🔥</h1>
-    <p class="subtitle">Envie o print da conversa ou foto do perfil</p>
+  <!-- SIDEBAR COM HISTÓRICO DE CHATS -->
+  <div class="sidebar" id="sidebar">
+    <button class="btn-new-chat" onclick="criarNovoChat()">+ Nova Conversa</button>
+    <div class="chat-list" id="chatList"></div>
+  </div>
 
-    <!-- ÁREA DE UPLOAD -->
-    <div class="upload-box" onclick="document.getElementById('fileInput').click()">
-      <span>📷</span>
-      <p id="uploadText">Toque para selecionar print ou foto</p>
-      <img id="preview" alt="Preview">
+  <!-- CONTAINER PRINCIPAL -->
+  <div class="main">
+    <div class="header">
+      <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+      <h1>RIZZ AI NORDESTINO 🔥</h1>
+      <div style="width: 22px;"></div>
     </div>
-    <input type="file" id="fileInput" accept="image/*" style="display: none;" onchange="mostrarPreview(event)">
 
-    <!-- CONTEXTO OPCIONAL -->
-    <textarea id="contexto" placeholder="Detalhe extra (opcional): Ex: Quero uma resposta engraçada..."></textarea>
+    <div class="content">
+      <!-- ONDE SE CONHECERAM -->
+      <div class="form-group">
+        <label>Onde vocês se conheceram / conversam?</label>
+        <select id="local">
+          <option value="Instagram (Story / Direct)">Instagram (Story / Direct)</option>
+          <option value="Tinder / App de Paquera">Tinder / App de Paquera</option>
+          <option value="WhatsApp">WhatsApp</option>
+          <option value="Festa / Rolê / Barzinho">Festa / Rolê / Barzinho</option>
+          <option value="Academia / Trabalho / Faculdade">Academia / Trabalho / Faculdade</option>
+          <option value="Acaso / Rua">Acaso / Rua</option>
+        </select>
+      </div>
 
-    <!-- BOTÃO -->
-    <button id="btnGerar" onclick="analisarEGerar()">GERAR RESPOSTAS</button>
+      <!-- TAMANHO DA MENSAGEM -->
+      <div class="form-group">
+        <label>Tamanho da Mensagem</label>
+        <select id="tamanho">
+          <option value="Curtas (Frases de 1 linha, diretas e rápidas)">Curtas (Tiradas rápidas / 1 linha)</option>
+          <option value="Médias (2 a 3 linhas, ideais para desenrolar)" selected>Médias (Equilibradas / 2 a 3 linhas)</option>
+          <option value="Longas (Desenrolo completo, puxando assunto profundo)">Longas (Desenrolo profundo)</option>
+        </select>
+      </div>
 
-    <!-- RESULTADO -->
-    <div id="resultado"></div>
+      <!-- PRINT OU FOTO -->
+      <div class="form-group">
+        <label>Print da conversa ou Foto do Perfil</label>
+        <div class="upload-box" onclick="document.getElementById('fileInput').click()">
+          <span style="font-size: 24px;">📸</span>
+          <p id="uploadText" style="font-size: 13px; color: #888; margin-top: 5px;">Toque para carregar a imagem</p>
+          <img id="preview" alt="Preview">
+        </div>
+        <input type="file" id="fileInput" accept="image/*" style="display: none;" onchange="mostrarPreview(event)">
+      </div>
+
+      <!-- DETALHES -->
+      <div class="form-group">
+        <label>O que ela disse ou detalhe importante?</label>
+        <textarea id="contexto" placeholder="Ex: Ela demorou a responder, postou foto no mar, gosta de forró..."></textarea>
+      </div>
+
+      <button class="btn-generate" id="btnGerar" onclick="gerarResposta()">ANALISAR E GERAR MENSAGEM ⚡</button>
+
+      <!-- RESPOSTAS -->
+      <div class="chat-history" id="chatHistory"></div>
+    </div>
   </div>
 
   <script>
     let imagemBase64 = null;
+    let chats = JSON.parse(localStorage.getItem('rizz_chats_v3')) || [];
+    let currentChatId = null;
+
+    window.onload = () => {
+      renderChatList();
+      if (chats.length > 0) {
+        carregarChat(chats[0].id);
+      } else {
+        criarNovoChat();
+      }
+    };
+
+    function toggleSidebar() {
+      document.getElementById('sidebar').classList.toggle('open');
+    }
 
     function mostrarPreview(event) {
       const file = event.target.files[0];
@@ -62,49 +133,127 @@
           const img = document.getElementById('preview');
           img.src = imagemBase64;
           img.style.display = 'block';
-          document.getElementById('uploadText').innerText = "Foto selecionada!";
+          document.getElementById('uploadText').innerText = "Foto pronta para análise!";
         }
         reader.readAsDataURL(file);
       }
     }
 
-    async function analisarEGerar() {
+    function criarNovoChat() {
+      const newChat = {
+        id: Date.now(),
+        titulo: "Conversa " + (chats.length + 1),
+        mensagens: []
+      };
+      chats.unshift(newChat);
+      salvarEAtualizar();
+      carregarChat(newChat.id);
+    }
+
+    function carregarChat(id) {
+      currentChatId = id;
+      const chat = chats.find(c => c.id === id);
+      const historyDiv = document.getElementById('chatHistory');
+      historyDiv.innerHTML = "";
+
+      if (chat && chat.mensagens) {
+        chat.mensagens.forEach(msg => {
+          adicionarCardResultado(msg.texto, false);
+        });
+      }
+      renderChatList();
+      document.getElementById('sidebar').classList.remove('open');
+    }
+
+    function renderChatList() {
+      const listDiv = document.getElementById('chatList');
+      listDiv.innerHTML = "";
+      chats.forEach(c => {
+        const item = document.createElement('div');
+        item.className = `chat-item ${c.id === currentChatId ? 'active' : ''}`;
+        item.innerText = c.titulo;
+        item.onclick = () => carregarChat(c.id);
+        listDiv.appendChild(item);
+      });
+    }
+
+    function salvarEAtualizar() {
+      localStorage.setItem('rizz_chats_v3', JSON.stringify(chats));
+      renderChatList();
+    }
+
+    async function gerarResposta() {
+      const local = document.getElementById('local').value;
+      const tamanho = document.getElementById('tamanho').value;
       const contexto = document.getElementById('contexto').value;
-      const resDiv = document.getElementById('resultado');
       const btn = document.getElementById('btnGerar');
 
-      if (!imagemBase64 && !contexto.trim()) {
-        alert("Envie uma foto/print ou digite um contexto!");
+      if (!contexto.trim() && !imagemBase64) {
+        alert("Mande o print da conversa ou digite o contexto!");
         return;
       }
 
-      resDiv.style.display = "block";
-      resDiv.innerHTML = "Lendo a imagem e criando respostas... ⚡";
       btn.disabled = true;
+      btn.innerText = "IA ANALISANDO A FOTO E CONTEXTO... ⏳";
 
-      const prompt = `Você é um assistente de paquera estilo Rizz AI. 
-Análise a imagem enviada (print de conversa do Tinder/Instagram ou foto de perfil) e o contexto extra: "${contexto}".
-Crie 3 opções de respostas/mensagens diretas, magnéticas e naturais:
-1. Engraçada / Provocante
-2. Direta / Charmosa
-3. Criativa / Curiosa
-Formatado de forma limpa e direta.`;
+      const prompt = `Você é um mestre supremo em paquera, psicologia da atração e desenrolo rápido.
+Sua missão: Levar o cara tímido do "oi" ao "vamos se ver" sem ele parecer chato, desesperado ou emocionado.
+
+SITUAÇÃO DO CARA:
+- Onde se conheceram/conversam: ${local}
+- Tamanho desejado das respostas: ${tamanho}
+- Contexto ou mensagem dela: ${contexto}
+
+DIRETRIZES DE LINGUAGEM E REGRAS:
+- Respeite RIGOROSAMENTE o tamanho selecionado: ${tamanho}.
+- Use um tom nordestino autêntico, moderno, esperto e natural (com gírias fluidas como 'resenha', 'se amostrar', 'desenrolado', 'visagem', 'dar o papo', 'dar um cheiro', etc.). Nada caricato ou forçado!
+- Seja confiante e direto.
+
+FORMATO DA RESPOSTA:
+Forneça 3 OPÇÕES de respostas prontas no tamanho pedido:
+1. 🎯 **Opção 1 (Afiada / Provocante):** Para quebrar o padrão e chamar atenção na hora.
+2. ⚡ **Opção 2 (Curiosa / Resenha):** Para fazer ela responder sem pensar duas vezes.
+3. 🔥 **Opção 3 (Avanço / Desenrolo):** Para puxar o assunto para o próximo nível ou marcar o encontro.`;
 
       try {
         let resposta;
         if (imagemBase64) {
-          // Passa a imagem + o prompt para o modelo com visão do Puter
           resposta = await puter.ai.chat(prompt, imagemBase64);
         } else {
           resposta = await puter.ai.chat(prompt);
         }
-        resDiv.innerHTML = resposta;
-      } catch (erro) {
-        resDiv.innerHTML = "Erro ao analisar. Tente novamente!";
-        console.error(erro);
+
+        const chatAtual = chats.find(c => c.id === currentChatId);
+        if (chatAtual.mensagens.length === 0) {
+          chatAtual.titulo = contexto.substring(0, 22) || "Desenrolo " + (chats.length);
+        }
+
+        chatAtual.mensagens.push({ texto: resposta });
+        salvarEAtualizar();
+
+        adicionarCardResultado(resposta, true);
+        document.getElementById('contexto').value = "";
+      } catch (e) {
+        alert("Erro ao analisar. Tente novamente!");
+        console.error(e);
       } finally {
         btn.disabled = false;
+        btn.innerText = "ANALISAR E GERAR MENSAGEM ⚡";
       }
+    }
+
+    function adicionarCardResultado(texto, scroll) {
+      const historyDiv = document.getElementById('chatHistory');
+      const card = document.createElement('div');
+      card.className = "msg-card";
+
+      card.innerHTML = `
+        <button class="copy-btn" onclick="navigator.clipboard.writeText(\`${texto.replace(/`/g, '')}\`); alert('Respostas copiadas!')">Copiar</button>
+        <div style="white-space: pre-line;">${texto}</div>
+      `;
+
+      historyDiv.prepend(card);
+      if (scroll) card.scrollIntoView({ behavior: 'smooth' });
     }
   </script>
 </body>
