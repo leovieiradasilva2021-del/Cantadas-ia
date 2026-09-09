@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gerador de Cantadas IA</title>
+  <script src="https://js.puter.com/v2/"></script>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 500px; margin: 40px auto; padding: 20px; background: #fff5f5; text-align: center; }
+    h1 { color: #e63946; }
+    textarea { width: 100%; height: 90px; margin: 10px 0; padding: 10px; border-radius: 8px; border: 1px solid #ccc; box-sizing: border-box; font-size: 15px; }
+    button { background: #e63946; color: white; border: none; padding: 14px 20px; font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer; width: 100%; margin-top: 5px; }
+    button:hover { background: #d62828; }
+    #resultado { margin-top: 20px; padding: 15px; background: white; border-radius: 8px; border: 1px solid #ddd; min-height: 60px; text-align: left; white-space: pre-line; line-height: 1.5; color: #333; }
+  </style>
+</head>
+<body>
+
+  <h1>Gerador de Cantadas ❤️</h1>
+  <p>Digite os gostos dela ou o contexto do perfil:</p>
+  
+  <textarea id="contexto" placeholder="Ex: Ela gosta de café, praia, signos e viaja bastante..."></textarea>
+  <button onclick="gerarCantada()">Gerar Cantadas</button>
+
+  <div id="resultado">Sua mensagem vai aparecer aqui...</div>
+
+  <script>
+    async function gerarCantada() {
+      const contexto = document.getElementById('contexto').value;
+      const resDiv = document.getElementById('resultado');
+
+      if (!contexto.trim()) {
+        alert("Digite algum detalhe para a IA se basear!");
+        return;
+      }
+
+      resDiv.innerHTML = "Pensando em boas mensagens... ⏳";
+
+      const prompt = `Você é um especialista em paquera e flerte. Crie 3 opções de mensagens inteligentes, bem-humoradas e criativas para xavecar uma mulher com base neste contexto: "${contexto}". Mantenha o tom divertido, envolvente e natural.`;
+
+      try {
+        const resposta = await puter.ai.chat(prompt);
+        resDiv.innerHTML = resposta;
+      } catch (erro) {
+        resDiv.innerHTML = "Erro ao gerar cantada. Tente novamente!";
+        console.error(erro);
+      }
+    }
+  </script>
+</body>
+</html>
